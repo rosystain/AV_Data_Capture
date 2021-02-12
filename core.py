@@ -171,6 +171,7 @@ def get_data_from_json(file_number, filepath, conf: config.Config):  # 从JSON�
     # ====================处理异常字符 END================== #\/:*?"<>|
 
     # ===  替换Studio片假名
+    """
     studio = studio.replace('アイエナジー','Energy')
     studio = studio.replace('アイデアポケット','Idea Pocket')
     studio = studio.replace('アキノリ','AKNR')
@@ -206,12 +207,13 @@ def get_data_from_json(file_number, filepath, conf: config.Config):  # 从JSON�
     studio = re.sub('.*/妄想族','妄想族',studio)
     studio = studio.replace('/',' ')
     # ===  替换Studio片假名 END
+    """
     
     location_rule = eval(conf.location_rule())
 
-    if 'actor' in conf.location_rule() and len(actor) > 100:
+    if 'actor' in conf.location_rule() and ',' in actor:# len(actor) > 50:
         print(conf.location_rule())
-        location_rule = eval(conf.location_rule().replace("actor","'多人作品'"))
+        location_rule = eval(conf.location_rule().replace("actor","'よろず'"))
     maxlen = conf.max_title_len()
     if 'title' in conf.location_rule() and len(title) > maxlen:
         shorttitle = title[0:maxlen]
@@ -447,7 +449,9 @@ def print_files(path, c_word, naming_rule, part, cn_sub, json_data, filepath, fa
             print(" <title>" + naming_rule + "</title>", file=code)
             print("  <set>", file=code)
             print("  </set>", file=code)
-            print("  <studio>" + studio + "+</studio>", file=code)
+            print("  <sorttitle>" + number + "</sorttitle>", file=code)
+            print("  <originaltitle>" + number + "</originaltitle>", file=code)
+            print("  <studio>" + studio + "</studio>", file=code)
             print("  <year>" + year + "</year>", file=code)
             print("  <outline>" + outline + "</outline>", file=code)
             print("  <plot>" + outline + "</plot>", file=code)
@@ -469,20 +473,31 @@ def print_files(path, c_word, naming_rule, part, cn_sub, json_data, filepath, fa
                 print("  <tag>中文字幕</tag>", file=code)
             if liuchu == '流出':
                 print("  <tag>流出</tag>", file=code)
+            uselesstags = ['サンプル動画', 'アウトレット', 'ギリモザ', 'デジモ', 'Blu-ray（ブルーレイ）', 'アウトレット', '単体作品', '特典付き・セット商品', '期間限定セール', '独占配信', '独占レンタル', 'ハイビジョン', 'FANZA配信限定', 'DVDトースター', '寝取り・寝取られ', 'ローション']
             try:
                 for i in tag:
-                    print("  <tag>" + i + "</tag>", file=code)
-                print("  <tag>" + series + "</tag>", file=code)
+                    if i == '寝取り・寝取られ':
+                        print("  <tag>寝取り・寝取られ・NTR</tag>", file=code)
+                    if i == 'ローション':
+                        print("  <tag>ローション・オイル</tag>", file=code)
+                    if i not in uselesstags:
+                        print("  <tag>" + i + "</tag>", file=code)
             except:
                 aaaaa = ''
             try:
                 for i in tag:
-                    print("  <genre>" + i + "</genre>", file=code)
+                    if i == '寝取り・寝取られ':
+                        print("  <genre>寝取り・寝取られ・NTR</genre>", file=code)
+                    if i == 'ローション':
+                        print("  <tag>ローション・オイル</tag>", file=code)
+                    if i not in uselesstags:
+                        print("  <genre>" + i + "</genre>", file=code)
             except:
                 aaaaaaaa = ''
             if cn_sub == '1':
                 print("  <genre>中文字幕</genre>", file=code)
             print("  <num>" + number + "</num>", file=code)
+            print("  <mpaa>R18+</mpaa>", file=code) 
             print("  <premiered>" + release + "</premiered>", file=code)
             print("  <cover>" + cover + "</cover>", file=code)
             if config.Config().is_trailer():
@@ -509,7 +524,7 @@ def cutImage(imagecut, path, number, c_word):
             imgSize = img.size
             w = img.width
             h = img.height
-            img2 = img.crop((w - h / 1.5, 0, w, h))
+            img2 = img.crop((w - h / 1.9, 0, w, h))
             img2.save(path + '/' + number + c_word + '-poster.jpg')
             print('[+]Image Cutted!     ' + path + '/' + number + c_word + '-poster.jpg')
         except:

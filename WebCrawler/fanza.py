@@ -119,16 +119,18 @@ def getRelease(text):
 
 def getTag(text):
     html = etree.fromstring(text, etree.HTMLParser())  # //table/tr[1]/td[1]/text()
+    uselesstags = ['サンプル動画', 'アウトレット', 'ギリモザ', 'デジモ', 'Blu-ray（ブルーレイ）', 'アウトレット', '単体作品', '特典付き・セット商品', '期間限定セール', '独占配信', 'ハイビジョン', 'FANZA配信限定']
     try:
         result = html.xpath(
             "//td[contains(text(),'ジャンル：')]/following-sibling::td/a/text()"
         )
         total = []
         for i in result:
-            try:
-                total.append(translateTag_to_sc(i))
-            except:
-                pass
+            if i not in uselesstags:
+                try:
+                    total.append(translateTag_to_sc(i))
+                except:
+                    pass
         return total
     except:
         result = html.xpath(
@@ -136,10 +138,11 @@ def getTag(text):
         )
         total = []
         for i in result:
-            try:
-                total.append(translateTag_to_sc(i))
-            except:
-                pass
+            if i not in uselesstags:
+                try:
+                    total.append(translateTag_to_sc(i))
+                except:
+                    pass
         return total
     return result
 
@@ -232,6 +235,10 @@ def main(number):
     # AV_Data_Capture.py.getNumber() over format the input, restore the h_ prefix
     if fanza_search_number.startswith("h-"):
         fanza_search_number = fanza_search_number.replace("h-", "h_")
+    if fanza_search_number.startswith("FSDSS") or fanza_search_number.startswith("STAR"):
+        fanza_search_number = "1" + fanza_search_number
+    if fanza_search_number.startswith("ABP"):
+        fanza_search_number = "118" + fanza_search_number
 
     fanza_search_number = re.sub(r"[^0-9a-zA-Z_]", "", fanza_search_number).lower()
 
@@ -263,15 +270,16 @@ def main(number):
         # but the hinban on the page is test00012
         # so get the hinban first, and then pass it to following functions
         fanza_hinban = getNum(htmlcode)
+        hinbanNum = str.upper(re.sub(r'^\d*(.+?)\d*\d*(\d{3})', '\\1-\\2', fanza_hinban))
         data = {
             "title": getTitle(htmlcode).strip(),
             "studio": getStudio(htmlcode),
             "outline": getOutline(htmlcode),
             "runtime": getRuntime(htmlcode),
-            "director": getDirector(htmlcode) if "anime" not in chosen_url else "",
+            "director": getDirector(htmlcode) if "anime" not in chosen_url and getDirector(htmlcode) != "----" else "",
             "actor": getActor(htmlcode) if "anime" not in chosen_url else "",
             "release": getRelease(htmlcode),
-            "number": fanza_hinban,
+            "number": hinbanNum,
             "cover": getCover(htmlcode, fanza_hinban),
             "imagecut": 1,
             "tag": getTag(htmlcode),
@@ -302,7 +310,11 @@ def main_htmlcode(number):
     # AV_Data_Capture.py.getNumber() over format the input, restore the h_ prefix
     if fanza_search_number.startswith("h-"):
         fanza_search_number = fanza_search_number.replace("h-", "h_")
-
+    if fanza_search_number.startswith("FSDSS") or fanza_search_number.startswith("STAR"):
+        fanza_search_number = "1" + fanza_search_number
+    if fanza_search_number.startswith("ABP"):
+        fanza_search_number = "118" + fanza_search_number
+        
     fanza_search_number = re.sub(r"[^0-9a-zA-Z_]", "", fanza_search_number).lower()
 
     fanza_urls = [
@@ -312,6 +324,7 @@ def main_htmlcode(number):
         "https://www.dmm.co.jp/mono/anime/-/detail/=/cid=",
         "https://www.dmm.co.jp/digital/videoc/-/detail/=/cid=",
         "https://www.dmm.co.jp/digital/nikkatsu/-/detail/=/cid=",
+        
     ]
     chosen_url = ""
     for url in fanza_urls:
